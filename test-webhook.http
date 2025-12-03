@@ -1,0 +1,135 @@
+### Test validation (simulates Microsoft Graph validation during subscription creation)
+POST http://localhost:3000/api/webhook/validate?validationToken=test-validation-token-12345
+Content-Type: application/json
+
+###
+
+### Send test notification (simulates Microsoft Graph sending notifications)
+POST http://localhost:3000/api/webhook/notifications
+Content-Type: application/json
+
+{
+  "value": [
+    {
+      "subscriptionId": "test-subscription-123",
+      "changeType": "created",
+      "resource": "me/messages/AAMkAGI2T...",
+      "resourceData": {
+        "@odata.type": "#Microsoft.Graph.Message",
+        "@odata.id": "Users/user@example.com/Messages/AAMkAGI2T...",
+        "id": "AAMkAGI2T..."
+      },
+      "clientState": "test-client-state",
+      "subscriptionExpirationDateTime": "2024-01-20T18:23:45.9356913Z",
+      "tenantId": "84bd8158-6d4d-4958-8b9f-9d6445542f95"
+    }
+  ]
+}
+
+###
+
+### Send multiple notifications at once
+POST http://localhost:3000/api/webhook/notifications
+Content-Type: application/json
+
+{
+  "value": [
+    {
+      "subscriptionId": "sub-001",
+      "changeType": "created",
+      "resource": "me/messages/msg-001",
+      "resourceData": {
+        "@odata.type": "#Microsoft.Graph.Message",
+        "id": "msg-001"
+      },
+      "clientState": "my-secret-state"
+    },
+    {
+      "subscriptionId": "sub-001",
+      "changeType": "updated",
+      "resource": "me/messages/msg-002",
+      "resourceData": {
+        "@odata.type": "#Microsoft.Graph.Message",
+        "id": "msg-002"
+      },
+      "clientState": "my-secret-state"
+    }
+  ]
+}
+
+###
+
+### Get all received notifications
+GET http://localhost:3000/api/webhook/notifications
+
+###
+
+### Get notifications with pagination
+GET http://localhost:3000/api/webhook/notifications?limit=10&offset=0
+
+###
+
+### Clear all notifications
+DELETE http://localhost:3000/api/webhook/notifications
+
+###
+
+### API 2: Subscription Management
+
+### Create subscription (requires Azure AD credentials in .env)
+POST http://localhost:3000/api/subscription/create
+Content-Type: application/json
+
+{
+  "changeType": "created,updated",
+  "notificationUrl": "https://your-ngrok-url.ngrok.io/api/webhook/notifications",
+  "resource": "me/mailFolders('Inbox')/messages",
+  "clientState": "my-secret-client-state"
+}
+
+###
+
+### List all subscriptions
+GET http://localhost:3000/api/subscription/list
+
+###
+
+### Delete subscription (replace {id} with actual subscription ID)
+DELETE http://localhost:3000/api/subscription/delete/{subscription-id}
+
+###
+
+### Renew subscription (replace {id} with actual subscription ID)
+PATCH http://localhost:3000/api/subscription/renew/{subscription-id}
+Content-Type: application/json
+
+{
+  "expirationDateTime": "2024-01-25T18:23:45.9356913Z"
+}
+
+###
+
+### Example: Create subscription for calendar events
+POST http://localhost:3000/api/subscription/create
+Content-Type: application/json
+
+{
+  "changeType": "created,updated,deleted",
+  "notificationUrl": "https://your-ngrok-url.ngrok.io/api/webhook/notifications",
+  "resource": "me/events",
+  "clientState": "calendar-webhook-secret"
+}
+
+###
+
+### Example: Create subscription for user changes (requires User.Read.All permission)
+POST http://localhost:3000/api/subscription/create
+Content-Type: application/json
+
+{
+  "changeType": "updated",
+  "notificationUrl": "https://your-url.ngrok.io/api/webhook/notifications",
+  "resource": "users",
+  "clientState": "users-webhook-secret"
+}
+
